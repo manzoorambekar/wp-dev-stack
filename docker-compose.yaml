@@ -2,7 +2,7 @@
 
 services:
   db:
-    image: mariadb:latest
+    image: mariadb:11.4
     # container_name: wp1_mariadb # optional: default is service name with dir prefix
     restart: unless-stopped     # optional: ensures the container restarts if it crashes or the server reboots
     environment:

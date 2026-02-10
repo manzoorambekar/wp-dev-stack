@@ -17,8 +17,9 @@ services:
 
   web:
 
-    build: . #image name given in docker file
-    #image: php:8.2-apache # stable version for wordpress, "wordpress:php8.2-apache" for official wordpress image with php and apache, but using php image and installing wordpress manually gives more control
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
     # container_name: wp1_web
     restart: unless-stopped 
     depends_on: # optional: first db then web, but not strictly needed as docker will handle the startup order
@@ -26,8 +27,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - wp1_data:/var/www/html
+      - ./wordpress:/var/www/html
 
 volumes:    #persistant storage for database and wordpress files
   wp1_db_data:
-  wp1_data:

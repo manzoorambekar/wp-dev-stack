@@ -2,7 +2,7 @@
 
 services:
   db:
-    image: mariadb:11.4
+    image: mariadb:11.4.4
     # container_name: wp1_mariadb # optional: default is service name with dir prefix
     restart: unless-stopped     # optional: ensures the container restarts if it crashes or the server reboots
     environment:
@@ -10,10 +10,15 @@ services:
       MARIADB_DATABASE: wp1_db
       MARIADB_USER: wp1_user
       MARIADB_PASSWORD: 111
-    # ports:      # not needed as its connectiond by service name, but can be uncommented for external access
+      # ports:      # not needed as its connectiond by service name, but can be uncommented for external access
       # - "3306:3306"
     volumes:
       - wp1_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
 
@@ -22,12 +27,20 @@ services:
       dockerfile: docker/php/Dockerfile
     # container_name: wp1_web
     restart: unless-stopped 
+    environment:
+      WP_FIX_PERMS: 1
     depends_on: # optional: first db then web, but not strictly needed as docker will handle the startup order
       - db 
     ports:
       - "8080:80"
     volumes:
-      - ./wordpress:/var/www/html
+      - ./wordpress:/var/www/html # Bind mount for wordpress files, allows live editing and persistence
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://localhost/') === false ? 1 : 0);"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
-volumes:    #persistant storage for database and wordpress files
-  wp1_db_data:
+volumes:    #persistant storage for database, still need to backup the data, but it will survive container restarts and recreations
+  wp1_db_data: {}
